@@ -12,7 +12,7 @@ RUN mkdir -p /var/run/sshd
 RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config && \
     sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
 
-# Set a default root password for SSH (for testing only; use keys in production)
+# Set a default root password for SSH (for testing; use SSH keys in production)
 RUN echo 'root:yourpassword' | chpasswd
 
 # Copy MongoDB config and startup script into the container
@@ -25,5 +25,5 @@ RUN chmod +x /start.sh
 # Expose ports for MongoDB (27017) and SSH (22)
 EXPOSE 27017 22
 
-# Run the startup script
-CMD ["/start.sh"]
+# Override the default entrypoint to run the startup script directly
+ENTRYPOINT ["/start.sh"]
