@@ -21,5 +21,5 @@ COPY mongod.conf /etc/mongod.conf
 # Expose ports for MongoDB (27017) and SSH (22)
 EXPOSE 27017 22
 
-# Start SSH and MongoDB with the custom config
-CMD service ssh start && mongod --config /etc/mongod.conf
+# Start SSH and MongoDB in the background
+CMD ["/bin/sh", "-c", "/usr/sbin/sshd -D & mongod --config /etc/mongod.conf"]

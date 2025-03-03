@@ -7,4 +7,4 @@ services:
       name: data
       mountPath: /data/db
       sizeGB: 10
-    dockerCommand: "service ssh start && mongod --config /etc/mongod.conf"
+    dockerCommand: "/bin/sh -c '/usr/sbin/sshd -D & mongod --config /etc/mongod.conf'"
