@@ -20,7 +20,7 @@ RUN mkdir -p /home/srv-cv2rs8t6l47c739hee00/.ssh && \
     chmod 700 /home/srv-cv2rs8t6l47c739hee00/.ssh
 
 # Add your SSH public key
-RUN echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGh/m297KlsG8BbyuNeIqPWxgwoGMQbpeBJEuYaTHxh8 your-michael@prometheus-it.com" > /home/srv-cv2rs8t6l47c739hee00/.ssh/authorized_keys && \
+RUN echo " IEPUBKEY ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGh/m297KlsG8BbyuNeIqPWxgwoGMQbpeBJEuYaTHxh8 your-michael@prometheus-it.com" > /home/srv-cv2rs8t6l47c739hee00/.ssh/authorized_keys && \
     chmod 600 /home/srv-cv2rs8t6l47c739hee00/.ssh/authorized_keys && \
     chown -R srv-cv2rs8t6l47c739hee00:srv-cv2rs8t6l47c739hee00 /home/srv-cv2rs8t6l47c739hee00/.ssh
 
@@ -32,11 +32,15 @@ RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin no/' /etc/ssh/s
     echo "PermitTTY yes" >> /etc/ssh/sshd_config && \
     echo "AllowUsers srv-cv2rs8t6l47c739hee00" >> /etc/ssh/sshd_config
 
-# Copy MongoDB config
+# Copy MongoDB config and startup script
 COPY mongod.conf /etc/mongod.conf
+COPY start.sh /start.sh
+
+# Make the startup script executable
+RUN chmod +x /start.sh
 
 # Expose ports
 EXPOSE 27017 22
 
-# Run SSH in foreground with debug, then MongoDB
-CMD ["/bin/bash", "-c", "/usr/sbin/sshd -D -e && mongod --config /etc/mongod.conf"]
+# Use the startup script as the entrypoint
+ENTRYPOINT ["/start.sh"]
