@@ -1,6 +1,6 @@
 FROM mongo:latest
 
-# Install required packages: openssh-server, supervisor (no need for bash if we use /bin/sh)
+# Install required packages: openssh-server and supervisor
 RUN apt-get update && \
     apt-get install -y openssh-server supervisor && \
     rm -rf /var/lib/apt/lists/*
@@ -12,13 +12,12 @@ RUN mkdir -p /var/run/sshd && chmod 755 /var/run/sshd
 RUN ssh-keygen -A
 
 # Create the Render service user with a dedicated home directory (not on /data/db)
-# Use /bin/sh as the login shell
 RUN useradd -m -d /home/srv-cv2rs8t6l47c739hee00 -s /bin/sh srv-cv2rs8t6l47c739hee00
 
 # Set up the SSH directory for the new user with correct permissions
 RUN mkdir -p /home/srv-cv2rs8t6l47c739hee00/.ssh && chmod 700 /home/srv-cv2rs8t6l47c739hee00/.ssh
 
-# Add your SSH public key (ensure the key line is exact—no extra spaces or text)
+# Add your SSH public key (exact key line; no extra spaces or text)
 RUN echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGh/m297KlsG8BbyuNeIqPWxgwoGMQbpeBJEuYaTHxh8 your-michael@prometheus-it.com" \
     > /home/srv-cv2rs8t6l47c739hee00/.ssh/authorized_keys && \
     chmod 600 /home/srv-cv2rs8t6l47c739hee00/.ssh/authorized_keys && \
@@ -29,15 +28,16 @@ RUN echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGh/m297KlsG8BbyuNeIqPWxgwoGMQbpeB
 # - Enable public key authentication
 # - Increase log level for debugging
 # - Allow TTY allocation and restrict login to our user
-# - Force a login shell (/bin/sh -l) so that an interactive shell is always spawned
 RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin no/' /etc/ssh/sshd_config && \
     echo "PubkeyAuthentication yes" >> /etc/ssh/sshd_config && \
     echo "LogLevel DEBUG3" >> /etc/ssh/sshd_config && \
     echo "PermitTTY yes" >> /etc/ssh/sshd_config && \
-    echo "AllowUsers srv-cv2rs8t6l47c739hee00" >> /etc/ssh/sshd_config && \
-    echo "ForceCommand /bin/sh -l" >> /etc/ssh/sshd_config
+    echo "AllowUsers srv-cv2rs8t6l47c739hee00" >> /etc/ssh/sshd_config
 
-# Adjust PAM so that pam_loginuid is optional (avoiding session termination issues)
+# Remove any ForceCommand if it exists (we want to use the user’s default shell)
+RUN sed -i '/ForceCommand/d' /etc/ssh/sshd_config
+
+# Adjust PAM so that pam_loginuid is optional (to avoid session termination issues)
 RUN sed -i 's/^session\s\+required\s\+pam_loginuid.so/session optional pam_loginuid.so/' /etc/pam.d/sshd
 
 # Copy MongoDB configuration file (suppresses logs, etc.)
