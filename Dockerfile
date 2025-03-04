@@ -24,7 +24,7 @@ RUN echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGh/m297KlsG8BbyuNeIqPWxgwoGMQbpeB
     chmod 600 /home/srv-cv2rs8t6l47c739hee00/.ssh/authorized_keys && \
     chown -R srv-cv2rs8t6l47c739hee00:srv-cv2rs8t6l47c739hee00 /home/srv-cv2rs8t6l47c739hee00/.ssh
 
-# Configure SSH server: Disable PAM, enable debug logging, and ensure session compatibility
+# Configure SSH server: Disable PAM, max debug logging, ensure session compatibility
 RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin no/' /etc/ssh/sshd_config && \
     echo "PubkeyAuthentication yes" >> /etc/ssh/sshd_config && \
     echo "UsePAM no" >> /etc/ssh/sshd_config && \
@@ -32,15 +32,11 @@ RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin no/' /etc/ssh/s
     echo "PermitTTY yes" >> /etc/ssh/sshd_config && \
     echo "AllowUsers srv-cv2rs8t6l47c739hee00" >> /etc/ssh/sshd_config
 
-# Copy MongoDB config and startup script
+# Copy MongoDB config
 COPY mongod.conf /etc/mongod.conf
-COPY start.sh /start.sh
-
-# Make the startup script executable
-RUN chmod +x /start.sh
 
 # Expose ports
 EXPOSE 27017 22
 
-# Use the startup script as the entrypoint
-ENTRYPOINT ["/start.sh"]
+# Run SSH in foreground with debug, then MongoDB
+CMD ["/bin/bash", "-c", "/usr/sbin/sshd -D -e && mongod --config /etc/mongod.conf"]
