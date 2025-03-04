@@ -13,8 +13,7 @@ RUN mkdir -p /var/run/sshd && \
 RUN ssh-keygen -A
 
 # Create the Render service user with a verified shell
-RUN useradd -m -s /bin/bash srv-cv2rs8t6l47c739hee00 && \
-    [ -f /bin/bash ] || ln -s /bin/sh /bin/bash
+RUN useradd -m -s /bin/bash srv-cv2rs8t6l47c739hee00
 
 # Set up SSH directory with correct permissions
 RUN mkdir -p /home/srv-cv2rs8t6l47c739hee00/.ssh && \
@@ -25,11 +24,13 @@ RUN echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGh/m297KlsG8BbyuNeIqPWxgwoGMQbpeB
     chmod 600 /home/srv-cv2rs8t6l47c739hee00/.ssh/authorized_keys && \
     chown -R srv-cv2rs8t6l47c739hee00:srv-cv2rs8t6l47c739hee00 /home/srv-cv2rs8t6l47c739hee00/.ssh
 
-# Configure SSH server: Disable PAM and enable debug logging
+# Configure SSH server: Disable PAM, enable debug logging, and ensure session compatibility
 RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin no/' /etc/ssh/sshd_config && \
     echo "PubkeyAuthentication yes" >> /etc/ssh/sshd_config && \
     echo "UsePAM no" >> /etc/ssh/sshd_config && \
-    echo "LogLevel DEBUG" >> /etc/ssh/sshd_config
+    echo "LogLevel DEBUG3" >> /etc/ssh/sshd_config && \
+    echo "PermitTTY yes" >> /etc/ssh/sshd_config && \
+    echo "AllowUsers srv-cv2rs8t6l47c739hee00" >> /etc/ssh/sshd_config
 
 # Copy MongoDB config and startup script
 COPY mongod.conf /etc/mongod.conf
