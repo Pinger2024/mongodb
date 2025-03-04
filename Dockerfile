@@ -11,19 +11,19 @@ RUN mkdir -p /var/run/sshd
 # Generate SSH host keys (required for SSH to start)
 RUN ssh-keygen -A
 
-# Create the Render service user (matches your service ID)
-RUN useradd -m -s /bin/bash srv-cv0sdd9u0jms73alp910
+# Create the Render service user (corrected to match your SSH command)
+RUN useradd -m -s /bin/bash srv-cv2rs8t6l47c739hee00
 
-# Set up SSH directory with correct permissions (Render requirement)
-RUN mkdir -p /home/srv-cv0sdd9u0jms73alp910/.ssh && \
-    chmod 700 /home/srv-cv0sdd9u0jms73alp910/.ssh
+# Set up SSH directory with correct permissions (Render requirement: 0700)
+RUN mkdir -p /home/srv-cv2rs8t6l47c739hee00/.ssh && \
+    chmod 700 /home/srv-cv2rs8t6l47c739hee00/.ssh
 
 # Add your SSH public key for key-based authentication
-RUN echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGh/m297KlsG8BbyuNeIqPWxgwoGMQbpeBJEuYaTHxh8 your-michael@prometheus-it.com" > /home/srv-cv0sdd9u0jms73alp910/.ssh/authorized_keys && \
-    chmod 600 /home/srv-cv0sdd9u0jms73alp910/.ssh/authorized_keys && \
-    chown -R srv-cv0sdd9u0jms73alp910:srv-cv0sdd9u0jms73alp910 /home/srv-cv0sdd9u0jms73alp910/.ssh
+RUN echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGh/m297KlsG8BbyuNeIqPWxgwoGMQbpeBJEuYaTHxh8 your-michael@prometheus-it.com" > /home/srv-cv2rs8t6l47c739hee00/.ssh/authorized_keys && \
+    chmod 600 /home/srv-cv2rs8t6l47c739hee00/.ssh/authorized_keys && \
+    chown -R srv-cv2rs8t6l47c739hee00:srv-cv2rs8t6l47c739hee00 /home/srv-cv2rs8t6l47c739hee00/.ssh
 
-# Configure SSH server (optional: adjust based on needs)
+# Configure SSH server
 RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin no/' /etc/ssh/sshd_config && \
     echo "PubkeyAuthentication yes" >> /etc/ssh/sshd_config
 
