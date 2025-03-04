@@ -1,22 +1,20 @@
 #!/bin/bash
 
-# Ensure no lingering sshd processes
-pkill sshd || echo "No sshd processes to kill."
+# Debug: Show initial state
+echo "Starting deployment..."
+ps aux | grep sshd || echo "No initial sshd processes."
 
-# Start SSH server with error logging
+# Start SSH server using service command
 echo "Starting SSH server..."
-/usr/sbin/sshd -e &
-SSHD_PID=$!
-echo "SSH server started with PID $SSHD_PID."
+service ssh start
 
-# Wait briefly to ensure sshd is up
-sleep 2
-
-# Verify sshd is running
-if ps -p $SSHD_PID > /dev/null; then
+# Check if sshd is running
+if ps aux | grep -q "[s]shd"; then
     echo "SSH server is running."
 else
     echo "SSH server failed to start."
+    # Run sshd in debug mode to capture errors
+    /usr/sbin/sshd -d -e
     exit 1
 fi
 

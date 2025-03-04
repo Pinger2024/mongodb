@@ -5,8 +5,9 @@ RUN apt-get update && \
     apt-get install -y openssh-server && \
     rm -rf /var/lib/apt/lists/*
 
-# Create SSH run directory
-RUN mkdir -p /var/run/sshd
+# Create SSH run directory with correct permissions
+RUN mkdir -p /var/run/sshd && \
+    chmod 755 /var/run/sshd
 
 # Generate SSH host keys
 RUN ssh-keygen -A
@@ -23,9 +24,10 @@ RUN echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGh/m297KlsG8BbyuNeIqPWxgwoGMQbpeB
     chmod 600 /home/srv-cv2rs8t6l47c739hee00/.ssh/authorized_keys && \
     chown -R srv-cv2rs8t6l47c739hee00:srv-cv2rs8t6l47c739hee00 /home/srv-cv2rs8t6l47c739hee00/.ssh
 
-# Configure SSH server with debug logging
+# Configure SSH server: Disable PAM and enable debug logging
 RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin no/' /etc/ssh/sshd_config && \
     echo "PubkeyAuthentication yes" >> /etc/ssh/sshd_config && \
+    echo "UsePAM no" >> /etc/ssh/sshd_config && \
     echo "LogLevel DEBUG" >> /etc/ssh/sshd_config
 
 # Copy MongoDB config and startup script
