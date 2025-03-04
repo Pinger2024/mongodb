@@ -13,7 +13,6 @@ if ps aux | grep -q "[s]shd"; then
     echo "SSH server is running."
 else
     echo "SSH server failed to start."
-    # Run sshd in debug mode to capture errors
     /usr/sbin/sshd -d -e
     exit 1
 fi

@@ -1,8 +1,8 @@
 FROM mongo:latest
 
-# Install openssh-server
+# Install openssh-server and ensure bash is available
 RUN apt-get update && \
-    apt-get install -y openssh-server && \
+    apt-get install -y openssh-server bash && \
     rm -rf /var/lib/apt/lists/*
 
 # Create SSH run directory with correct permissions
@@ -12,8 +12,9 @@ RUN mkdir -p /var/run/sshd && \
 # Generate SSH host keys
 RUN ssh-keygen -A
 
-# Create the Render service user
-RUN useradd -m -s /bin/bash srv-cv2rs8t6l47c739hee00
+# Create the Render service user with a verified shell
+RUN useradd -m -s /bin/bash srv-cv2rs8t6l47c739hee00 && \
+    [ -f /bin/bash ] || ln -s /bin/sh /bin/bash
 
 # Set up SSH directory with correct permissions
 RUN mkdir -p /home/srv-cv2rs8t6l47c739hee00/.ssh && \
