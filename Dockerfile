@@ -27,10 +27,9 @@ RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin no/' /etc/ssh/s
     echo "AllowUsers srv-cv2rs8t6l47c739hee00" >> /etc/ssh/sshd_config && \
     echo "LogLevel DEBUG3" >> /etc/ssh/sshd_config && \
     echo "UsePAM no" >> /etc/ssh/sshd_config && \
-    echo "StrictModes no" >> /etc/ssh/sshd_config
-
-# Adjust PAM settings (optional since UsePAM no)
-RUN sed -i 's/^session\s\+required\s\+pam_loginuid.so/session optional pam_loginuid.so/' /etc/pam.d/sshd
+    echo "StrictModes no" >> /etc/ssh/sshd_config && \
+    echo "AcceptEnv LANG LC_*" >> /etc/ssh/sshd_config && \
+    echo "Subsystem sftp /usr/lib/openssh/sftp-server" >> /etc/ssh/sshd_config
 
 # Copy configurations
 COPY mongod.conf /etc/mongod.conf
