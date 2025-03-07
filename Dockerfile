@@ -23,18 +23,19 @@ RUN chmod 700 /root
 RUN mkdir -p /home/srv-cv2rs8t6l47c739hee00/.ssh && \
     chmod 700 /home/srv-cv2rs8t6l47c739hee00/.ssh
 
-# Add your SSH public key (fixing the IEPUBKEY typo)
+# Add your SSH public key
 RUN echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGh/m297KlsG8BbyuNeIqPWxgwoGMQbpeBJEuYaTHxh8 your-michael@prometheus-it.com" > /home/srv-cv2rs8t6l47c739hee00/.ssh/authorized_keys && \
     chmod 600 /home/srv-cv2rs8t6l47c739hee00/.ssh/authorized_keys && \
     chown -R srv-cv2rs8t6l47c739hee00:srv-cv2rs8t6l47c739hee00 /home/srv-cv2rs8t6l47c739hee00/.ssh
 
-# Configure SSH settings
+# Configure SSH settings with debug logging
 RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin no/' /etc/ssh/sshd_config && \
     echo "PubkeyAuthentication yes" >> /etc/ssh/sshd_config && \
     echo "PermitTTY yes" >> /etc/ssh/sshd_config && \
-    echo "AllowUsers srv-cv2rs8t6l47c739hee00" >> /etc/ssh/sshd_config
+    echo "AllowUsers srv-cv2rs8t6l47c739hee00" >> /etc/ssh/sshd_config && \
+    echo "LogLevel DEBUG3" >> /etc/ssh/sshd_config
 
-# Adjust PAM settings as recommended
+# Adjust PAM settings
 RUN sed -i 's/^session\s\+required\s\+pam_loginuid.so/session optional pam_loginuid.so/' /etc/pam.d/sshd
 
 # Copy configurations
@@ -44,5 +45,5 @@ COPY supervisord.conf /etc/supervisor/supervisord.conf
 # Expose necessary ports
 EXPOSE 27017 22
 
-# Run Supervisor to manage SSH and MongoDB
+# Run Supervisor
 CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisor/supervisord.conf"]
