@@ -1,8 +1,11 @@
 FROM mongo:latest
 
-# Install required packages
+# Set GLIBC tunable environment variable to disable unsupported rseq support.
+ENV GLIBC_TUNABLES=glibc.pthread.rseq=0
+
+# Install required packages, including numactl for NUMA interleaving
 RUN apt-get update && \
-    apt-get install -y openssh-server bash supervisor && \
+    apt-get install -y openssh-server bash supervisor numactl && \
     rm -rf /var/lib/apt/lists/*
 
 # Setup SSH

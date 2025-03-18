@@ -7,3 +7,6 @@ services:
       name: data
       mountPath: /data/db
       sizeGB: 10
+    envVars:
+      - key: GLIBC_TUNABLES
+        value: "glibc.pthread.rseq=0"
