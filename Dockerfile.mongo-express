@@ -1,0 +1,17 @@
+FROM mongo-express:1.0.2
+
+# Port mongo-express listens on
+EXPOSE 8081
+
+# Configure via env at deploy time on Render:
+# - ME_CONFIG_MONGODB_SERVER: internal host of your Mongo service (e.g., "mongodb")
+# - ME_CONFIG_MONGODB_PORT: 27017
+# - ME_CONFIG_BASICAUTH_USERNAME / ME_CONFIG_BASICAUTH_PASSWORD: required for basic auth
+# - ME_CONFIG_SITE_SSL_ENABLED: "false" (Render terminates TLS)
+# - ME_CONFIG_MONGODB_ENABLE_ADMIN: "true" to show all DBs
+
+# Defaults (can be overridden by env vars in Render)
+ENV ME_CONFIG_SITE_SSL_ENABLED=false \
+    ME_CONFIG_MONGODB_ENABLE_ADMIN=true \
+    ME_CONFIG_BASICAUTH=true
+

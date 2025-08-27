@@ -19,3 +19,12 @@ See the guide at https://render.com/docs/deploy-mongodb.
 If you need help, chat with us at https://render.com/chat.
 
 [MongoDB]: https://www.mongodb.com/
+
+## Local Compass via SSH Tunnel
+
+To connect Compass from your laptop to this private MongoDB on Render, see `docs/COMPASS_TUNNEL.md` and use the helper scripts in `scripts/` to open and verify a tunnel.
+
+## Alternatives When SSH Isn’t Attachable
+
+If the Render SSH bastion can’t attach to your service, you can still explore prod data:
+- `docs/VIEW_PROD_LOCALLY.md` covers a Mongo Express sidecar (browser UI) and scheduled S3 dumps you can restore locally.
