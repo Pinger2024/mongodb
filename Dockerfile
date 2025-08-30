@@ -8,12 +8,8 @@ RUN apt-get update && \
     apt-get install -y dropbear supervisor numactl && \
     rm -rf /var/lib/apt/lists/*
 
-# Setup dropbear SSH (much simpler than OpenSSH)
-RUN mkdir -p /etc/dropbear && \
-    # Generate host keys for dropbear
-    dropbearkey -t rsa -f /etc/dropbear/dropbear_rsa_host_key && \
-    dropbearkey -t ecdsa -f /etc/dropbear/dropbear_ecdsa_host_key && \
-    dropbearkey -t ed25519 -f /etc/dropbear/dropbear_ed25519_host_key
+# Dropbear keys are already generated during install, just ensure directory exists
+RUN mkdir -p /etc/dropbear
 
 # Create SSH directory for root
 RUN mkdir -p /root/.ssh && \
