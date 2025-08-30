@@ -1,0 +1,71 @@
+FROM mongo:latest
+
+# Set GLIBC tunable environment variable
+ENV GLIBC_TUNABLES=glibc.pthread.rseq=0
+
+# Install required packages  
+RUN apt-get update && \
+    apt-get install -y openssh-server supervisor numactl && \
+    rm -rf /var/lib/apt/lists/*
+
+# Setup SSH 
+RUN mkdir -p /var/run/sshd && \
+    ssh-keygen -A
+
+# Configure SSH to work with Render's proxy
+RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PubkeyAuthentication yes/PubkeyAuthentication yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config && \
+    sed -i 's/UsePAM yes/UsePAM no/' /etc/ssh/sshd_config && \
+    echo "StrictModes no" >> /etc/ssh/sshd_config && \
+    echo "PermitEmptyPasswords yes" >> /etc/ssh/sshd_config && \
+    echo "PermitUserEnvironment yes" >> /etc/ssh/sshd_config
+
+# Create SSH directory and EMPTY authorized_keys for Render to populate
+RUN mkdir -p /root/.ssh && \
+    chmod 700 /root/.ssh && \
+    touch /root/.ssh/authorized_keys && \
+    chmod 600 /root/.ssh/authorized_keys
+
+# Create a startup script that checks for Render's key injection methods
+RUN cat > /docker-entrypoint.sh << 'EOF'
+#!/bin/bash
+set -e
+
+# Method 1: Check if Render provides key via environment variable
+if [ -n "$RENDER_SSH_PUBLIC_KEY" ]; then
+    echo "$RENDER_SSH_PUBLIC_KEY" > /root/.ssh/authorized_keys
+    chmod 600 /root/.ssh/authorized_keys
+fi
+
+# Method 2: Check if Render mounts keys at a specific location
+if [ -f /render/ssh/authorized_keys ]; then
+    cp /render/ssh/authorized_keys /root/.ssh/authorized_keys
+    chmod 600 /root/.ssh/authorized_keys
+fi
+
+# Method 3: If still no keys, allow connections from Render's internal network
+if [ ! -s /root/.ssh/authorized_keys ]; then
+    # Allow passwordless root login from internal Render network
+    echo "Match Address 10.214.0.0/16" >> /etc/ssh/sshd_config
+    echo "    PermitRootLogin yes" >> /etc/ssh/sshd_config
+    echo "    PasswordAuthentication yes" >> /etc/ssh/sshd_config
+    echo "    PermitEmptyPasswords yes" >> /etc/ssh/sshd_config
+    # Set empty password for root
+    passwd -d root
+fi
+
+# Start supervisor
+exec /usr/bin/supervisord -n -c /etc/supervisor/supervisord.conf
+EOF
+RUN chmod +x /docker-entrypoint.sh
+
+# Copy configurations
+COPY mongod.conf /etc/mongod.conf
+COPY supervisord.withSSH /etc/supervisor/supervisord.conf
+
+# Expose ports
+EXPOSE 27017 22
+
+# Use our entrypoint
+ENTRYPOINT ["/docker-entrypoint.sh"]
