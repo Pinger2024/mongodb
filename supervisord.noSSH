@@ -3,13 +3,6 @@ nodaemon=true
 logfile=/var/log/supervisord.log
 loglevel=debug
 
-[program:sshd]
-command=/usr/sbin/sshd -D -e
-autostart=true
-autorestart=true
-stderr_logfile=/var/log/sshd.log
-stdout_logfile=/var/log/sshd.log
-
 [program:mongod]
 command=numactl --interleave=all /usr/bin/mongod --config /etc/mongod.conf
 autostart=true
