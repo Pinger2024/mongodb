@@ -1,0 +1,57 @@
+FROM mongo:latest
+
+# Set GLIBC tunable environment variable
+ENV GLIBC_TUNABLES=glibc.pthread.rseq=0
+
+# Install required packages
+RUN apt-get update && \
+    apt-get install -y openssh-server supervisor numactl && \
+    rm -rf /var/lib/apt/lists/*
+
+# Setup SSH for Render - CRITICAL: Render needs specific configuration
+RUN mkdir -p /var/run/sshd && \
+    ssh-keygen -A && \
+    # Create .ssh directory in root's home with correct permissions
+    mkdir -p /root/.ssh && \
+    chmod 700 /root/.ssh && \
+    # IMPORTANT: Create authorized_keys file that Render will populate
+    touch /root/.ssh/authorized_keys && \
+    chmod 600 /root/.ssh/authorized_keys
+
+# Configure SSH to accept Render's injected keys
+RUN echo "Port 22" > /etc/ssh/sshd_config && \
+    echo "HostKey /etc/ssh/ssh_host_rsa_key" >> /etc/ssh/sshd_config && \
+    echo "HostKey /etc/ssh/ssh_host_ecdsa_key" >> /etc/ssh/sshd_config && \
+    echo "HostKey /etc/ssh/ssh_host_ed25519_key" >> /etc/ssh/sshd_config && \
+    echo "PermitRootLogin yes" >> /etc/ssh/sshd_config && \
+    echo "PubkeyAuthentication yes" >> /etc/ssh/sshd_config && \
+    echo "AuthorizedKeysFile /root/.ssh/authorized_keys" >> /etc/ssh/sshd_config && \
+    echo "PasswordAuthentication no" >> /etc/ssh/sshd_config && \
+    echo "ChallengeResponseAuthentication no" >> /etc/ssh/sshd_config && \
+    echo "UsePAM no" >> /etc/ssh/sshd_config && \
+    echo "X11Forwarding no" >> /etc/ssh/sshd_config && \
+    echo "PrintMotd no" >> /etc/ssh/sshd_config && \
+    echo "AcceptEnv LANG LC_*" >> /etc/ssh/sshd_config && \
+    echo "Subsystem sftp /usr/lib/openssh/sftp-server" >> /etc/ssh/sshd_config && \
+    echo "LogLevel DEBUG3" >> /etc/ssh/sshd_config
+
+# Copy configurations
+COPY mongod.conf /etc/mongod.conf
+COPY supervisord.conf /etc/supervisor/supervisord.conf
+
+# Create startup script to handle Render's key injection
+RUN echo '#!/bin/bash' > /start.sh && \
+    echo '# Check if Render has injected keys via environment or file' >> /start.sh && \
+    echo 'if [ -n "$SSH_PUBLIC_KEY" ]; then' >> /start.sh && \
+    echo '  echo "$SSH_PUBLIC_KEY" > /root/.ssh/authorized_keys' >> /start.sh && \
+    echo '  chmod 600 /root/.ssh/authorized_keys' >> /start.sh && \
+    echo 'fi' >> /start.sh && \
+    echo '# Start supervisor' >> /start.sh && \
+    echo 'exec /usr/bin/supervisord -n -c /etc/supervisor/supervisord.conf' >> /start.sh && \
+    chmod +x /start.sh
+
+# Expose ports
+EXPOSE 27017 22
+
+# Use the startup script
+CMD ["/start.sh"]

@@ -1,33 +1,32 @@
 FROM mongo:latest
 
-# Set GLIBC tunable environment variable to disable unsupported rseq support.
+# Set GLIBC tunable environment variable
 ENV GLIBC_TUNABLES=glibc.pthread.rseq=0
 
-# Install required packages
+# Install required packages  
 RUN apt-get update && \
-    apt-get install -y openssh-server supervisor numactl && \
+    apt-get install -y openssh-server supervisor numactl bash && \
     rm -rf /var/lib/apt/lists/*
 
-# Setup SSH for Render (without hardcoded keys)
+# Setup SSH with minimal configuration for Render
 RUN mkdir -p /var/run/sshd && \
-    chmod 755 /var/run/sshd && \
-    ssh-keygen -A && \
-    mkdir -p /root/.ssh && \
-    chmod 700 /root/.ssh && \
-    touch /root/.ssh/authorized_keys && \
-    chmod 600 /root/.ssh/authorized_keys
+    ssh-keygen -A
 
-# Configure SSH for Render compatibility
+# CRITICAL: Set up SSH to accept any keys that Render provides
 RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config && \
-    echo "PubkeyAuthentication yes" >> /etc/ssh/sshd_config && \
-    echo "PasswordAuthentication no" >> /etc/ssh/sshd_config && \
+    sed -i 's/#PubkeyAuthentication yes/PubkeyAuthentication yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config && \
+    sed -i 's/UsePAM yes/UsePAM no/' /etc/ssh/sshd_config && \
     echo "StrictModes no" >> /etc/ssh/sshd_config
+
+# Create .ssh directory structure
+RUN mkdir -p /root/.ssh && chmod 700 /root/.ssh
 
 # Copy configurations
 COPY mongod.conf /etc/mongod.conf
-COPY supervisord.conf /etc/supervisor/supervisord.conf
+COPY supervisord.withSSH /etc/supervisor/supervisord.conf
 
-# Expose necessary ports
+# Expose ports
 EXPOSE 27017 22
 
 # Run Supervisor
