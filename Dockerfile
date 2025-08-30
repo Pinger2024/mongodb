@@ -27,7 +27,7 @@ RUN echo '[supervisord]' > /etc/supervisor/supervisord.conf && \
     echo 'loglevel=debug' >> /etc/supervisor/supervisord.conf && \
     echo '' >> /etc/supervisor/supervisord.conf && \
     echo '[program:dropbear]' >> /etc/supervisor/supervisord.conf && \
-    echo 'command=dropbear -F -E -w -s -g -p 22' >> /etc/supervisor/supervisord.conf && \
+    echo 'command=dropbear -F -E -p 22' >> /etc/supervisor/supervisord.conf && \
     echo 'autostart=true' >> /etc/supervisor/supervisord.conf && \
     echo 'autorestart=true' >> /etc/supervisor/supervisord.conf && \
     echo 'stderr_logfile=/var/log/dropbear.log' >> /etc/supervisor/supervisord.conf && \
