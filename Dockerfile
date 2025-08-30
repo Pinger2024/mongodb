@@ -25,26 +25,24 @@ RUN mkdir -p /root/.ssh && \
 COPY mongod.conf /etc/mongod.conf
 
 # Create a new supervisord config with dropbear
-RUN cat > /etc/supervisor/supervisord.conf << 'EOF'
-[supervisord]
-nodaemon=true
-logfile=/var/log/supervisord.log
-loglevel=debug
-
-[program:dropbear]
-command=dropbear -F -E -w -s -g -p 22
-autostart=true
-autorestart=true
-stderr_logfile=/var/log/dropbear.log
-stdout_logfile=/var/log/dropbear.log
-
-[program:mongod]
-command=numactl --interleave=all /usr/bin/mongod --config /etc/mongod.conf
-autostart=true
-autorestart=true
-stderr_logfile=/var/log/mongod.log
-stdout_logfile=/var/log/mongod.log
-EOF
+RUN echo '[supervisord]' > /etc/supervisor/supervisord.conf && \
+    echo 'nodaemon=true' >> /etc/supervisor/supervisord.conf && \
+    echo 'logfile=/var/log/supervisord.log' >> /etc/supervisor/supervisord.conf && \
+    echo 'loglevel=debug' >> /etc/supervisor/supervisord.conf && \
+    echo '' >> /etc/supervisor/supervisord.conf && \
+    echo '[program:dropbear]' >> /etc/supervisor/supervisord.conf && \
+    echo 'command=dropbear -F -E -w -s -g -p 22' >> /etc/supervisor/supervisord.conf && \
+    echo 'autostart=true' >> /etc/supervisor/supervisord.conf && \
+    echo 'autorestart=true' >> /etc/supervisor/supervisord.conf && \
+    echo 'stderr_logfile=/var/log/dropbear.log' >> /etc/supervisor/supervisord.conf && \
+    echo 'stdout_logfile=/var/log/dropbear.log' >> /etc/supervisor/supervisord.conf && \
+    echo '' >> /etc/supervisor/supervisord.conf && \
+    echo '[program:mongod]' >> /etc/supervisor/supervisord.conf && \
+    echo 'command=numactl --interleave=all /usr/bin/mongod --config /etc/mongod.conf' >> /etc/supervisor/supervisord.conf && \
+    echo 'autostart=true' >> /etc/supervisor/supervisord.conf && \
+    echo 'autorestart=true' >> /etc/supervisor/supervisord.conf && \
+    echo 'stderr_logfile=/var/log/mongod.log' >> /etc/supervisor/supervisord.conf && \
+    echo 'stdout_logfile=/var/log/mongod.log' >> /etc/supervisor/supervisord.conf
 
 # Expose ports
 EXPOSE 27017 22
